@@ -1,0 +1,10 @@
+15,Sad
+16,Neutral
+17,Sad
+18,Sad
+19,Sad
+20,Sad
+21,Sad
+22,Neutral
+23,Angry
+24,Neutral
