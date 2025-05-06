@@ -20,22 +20,25 @@ from export_util import *
 import librosa
 import librosa.display
 import multiprocessing
-import fitz 
+import fitz
+
 input_frame = [None]
 result_frames = [None, None]
-final_model_op = {"fer":None, "pose":None, "speech":None}
+final_model_op = {"fer": None, "pose": None, "speech": None}
 
-class_labels = ['Angry','Happy','Neutral','Sad','Surprise']
+class_labels = ['Angry', 'Happy', 'Neutral', 'Sad', 'Surprise']
 
-time_sec_list=['0']
+time_sec_list = ['0']
 
 # conn = sqlite3.connect('database.db')
 # c = conn.cursor()
 # c.execute("CREATE TABLE USER(NAME VARCHAR(30) NOT NULL, EMAIL VARCHAR(255));")
 
+
 class Ui_StartWindow(object):
+
     def setupUi(self, MainWindow):
-        
+
         MainWindow.setObjectName("MainWindow")
         MainWindow.setEnabled(True)
         MainWindow.resize(1100, 700)
@@ -51,11 +54,11 @@ class Ui_StartWindow(object):
         self.lineEdit = QLineEdit(self.centralwidget)
         self.lineEdit.setGeometry(QRect(400, 450, 300, 50))
         self.lineEdit.setStyleSheet("border: 1px solid white;\n"
-"border-radius: 10px;\n"
-"font: 14pt \"Noto Sans\";\n"
-"background-color: rgb(59, 56, 56);\n"
-"color: rgb(255, 255, 255);\n"
-"text-align:center;")
+                                    "border-radius: 10px;\n"
+                                    "font: 14pt \"Noto Sans\";\n"
+                                    "background-color: rgb(59, 56, 56);\n"
+                                    "color: rgb(255, 255, 255);\n"
+                                    "text-align:center;")
         self.lineEdit.setMaxLength(100)
         self.lineEdit.setEchoMode(QLineEdit.Normal)
         self.lineEdit.setCursorPosition(0)
@@ -74,49 +77,51 @@ class Ui_StartWindow(object):
         self.pushButton.setFont(font)
         self.pushButton.setCursor(QCursor(Qt.PointingHandCursor))
         self.pushButton.setAutoFillBackground(False)
-        self.pushButton.setStyleSheet("QPushButton {\n"
-"color: rgb(255, 255, 255);\n"
-"font: 14pt \"Noto Sans\";\n"
-"text-align: center;\n"
-"border: 1px solid transparent;\n"
-"border-radius: 10px;\n"
-"    background-color: rgb(181, 99, 195);\n"
-"padding: 5px 10px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: rgb(153, 81, 166);\n"
-"}\n"
-"\n"
-"QPushButton:pressed {\n"
-"    background-color: rgb(120, 63, 131);\n"
-"}\n"
-"")
+        self.pushButton.setStyleSheet(
+            "QPushButton {\n"
+            "color: rgb(255, 255, 255);\n"
+            "font: 14pt \"Noto Sans\";\n"
+            "text-align: center;\n"
+            "border: 1px solid transparent;\n"
+            "border-radius: 10px;\n"
+            "    background-color: rgb(181, 99, 195);\n"
+            "padding: 5px 10px;\n"
+            "}\n"
+            "\n"
+            "QPushButton:hover {\n"
+            "    background-color: rgb(153, 81, 166);\n"
+            "}\n"
+            "\n"
+            "QPushButton:pressed {\n"
+            "    background-color: rgb(120, 63, 131);\n"
+            "}\n"
+            "")
         self.pushButton.setDefault(True)
         self.pushButton.setFlat(False)
         self.pushButton.setObjectName("pushButton")
         self.lineEdit_2 = QLineEdit(self.centralwidget)
         self.lineEdit_2.setGeometry(QRect(400, 510, 300, 50))
         self.lineEdit_2.setStyleSheet("border: 1px solid white;\n"
-"font: 14pt \"Noto Sans\";\n"
-"border-radius: 10px;\n"
-"background-color: rgb(59, 56, 56);\n"
-"color: rgb(255, 255, 255);\n"
-"text-align:center;")
+                                      "font: 14pt \"Noto Sans\";\n"
+                                      "border-radius: 10px;\n"
+                                      "background-color: rgb(59, 56, 56);\n"
+                                      "color: rgb(255, 255, 255);\n"
+                                      "text-align:center;")
         self.lineEdit_2.setMaxLength(200)
         self.lineEdit_2.setCursorPosition(5)
         self.lineEdit_2.setAlignment(Qt.AlignCenter)
         self.lineEdit_2.setObjectName("lineEdit_2")
         self.progressBar = QProgressBar(self.centralwidget)
         self.progressBar.setGeometry(QRect(0, 690, 1100, 10))
-        self.progressBar.setStyleSheet("QProgressBar {\n"
-"border: 0px solid transparent;\n"
-"}\n"
-"\n"
-"QProgressBar::chunk {\n"
-"\n"
-"    background-color: rgb(141, 76, 152);\n"
-"}")
+        self.progressBar.setStyleSheet(
+            "QProgressBar {\n"
+            "border: 0px solid transparent;\n"
+            "}\n"
+            "\n"
+            "QProgressBar::chunk {\n"
+            "\n"
+            "    background-color: rgb(141, 76, 152);\n"
+            "}")
         self.progressBar.setProperty("value", 0)
         self.progressBar.setTextVisible(False)
         self.progressBar.setObjectName("progressBar")
@@ -133,7 +138,8 @@ class Ui_StartWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Cosmo Clutch"))#changed
+        MainWindow.setWindowTitle(_translate("MainWindow",
+                                             "Cosmo Clutch"))  #changed
         self.lineEdit.setText(_translate("MainWindow", "Name"))
         self.pushButton.setText(_translate("MainWindow", "Start Model"))
         self.lineEdit_2.setText(_translate("MainWindow", "Email"))
@@ -144,7 +150,7 @@ class Ui_StartWindow(object):
         self.label_2.setText("Loading Models")
         self.progressBar.setProperty("value", 0)
         with open('details.txt', 'w') as file:
-            file.write(self.lineEdit.text()+','+self.lineEdit_2.text())
+            file.write(self.lineEdit.text() + ',' + self.lineEdit_2.text())
         Window.setCursor(QCursor(Qt.WaitCursor))
         self.load_all_models()
         Window.hide()
@@ -157,11 +163,14 @@ class Ui_StartWindow(object):
         global mp_pose, pose, face_classifier, classifier, detector1, detector2, detector3, detector4, detector5, detector6
         self.label_2.setText("Loading POSE")
         mp_pose = mp.solutions.pose
-        pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+        pose = mp_pose.Pose(static_image_mode=False,
+                            min_detection_confidence=0.5,
+                            min_tracking_confidence=0.5)
         self.progressBar.setProperty("value", 25)
         self.label_2.setText("Loading FER")
-        face_classifier = cv2.CascadeClassifier('Model/haarcascade_frontalface_default.xml')
-        classifier =load_model('Model/Emotion_vgg.h5')
+        face_classifier = cv2.CascadeClassifier(
+            'Model/haarcascade_frontalface_default.xml')
+        classifier = load_model('Model/Emotion_vgg.h5')
         self.progressBar.setProperty("value", 50)
 
         estimators = get_best_estimators(True)
@@ -169,12 +178,36 @@ class Ui_StartWindow(object):
         print("Loading estimators: {}".format(estimators_str))
 
         features = ["mfcc", "chroma", "mel"]
-        detector1 = EmotionRecognizer(estimator_dict["SVC"], emotions=["sad","neutral","happy","angry"], features=features, verbose=0)
-        detector2 = EmotionRecognizer(estimator_dict["RandomForestClassifier"], emotions=["sad","neutral","happy","angry"], features=features, verbose=0)
-        detector3 = EmotionRecognizer(estimator_dict["GradientBoostingClassifier"], emotions=["sad","neutral","happy","angry"], features=features, verbose=0)
-        detector4 = EmotionRecognizer(estimator_dict["KNeighborsClassifier"], emotions=["sad","neutral","happy","angry"], features=features, verbose=0)
-        detector5 = EmotionRecognizer(estimator_dict["MLPClassifier"], emotions=["sad","neutral","happy","angry"], features=features, verbose=0)
-        detector6 = EmotionRecognizer(estimator_dict["BaggingClassifier"], emotions=["sad","neutral","happy","angry"], features=features, verbose=0)
+        detector1 = EmotionRecognizer(
+            estimator_dict["SVC"],
+            emotions=["sad", "neutral", "happy", "angry"],
+            features=features,
+            verbose=0)
+        detector2 = EmotionRecognizer(
+            estimator_dict["RandomForestClassifier"],
+            emotions=["sad", "neutral", "happy", "angry"],
+            features=features,
+            verbose=0)
+        detector3 = EmotionRecognizer(
+            estimator_dict["GradientBoostingClassifier"],
+            emotions=["sad", "neutral", "happy", "angry"],
+            features=features,
+            verbose=0)
+        detector4 = EmotionRecognizer(
+            estimator_dict["KNeighborsClassifier"],
+            emotions=["sad", "neutral", "happy", "angry"],
+            features=features,
+            verbose=0)
+        detector5 = EmotionRecognizer(
+            estimator_dict["MLPClassifier"],
+            emotions=["sad", "neutral", "happy", "angry"],
+            features=features,
+            verbose=0)
+        detector6 = EmotionRecognizer(
+            estimator_dict["BaggingClassifier"],
+            emotions=["sad", "neutral", "happy", "angry"],
+            features=features,
+            verbose=0)
         self.label_2.setText("Loading SVC")
         detector1.train()
         print("SVC Ready")
@@ -202,14 +235,22 @@ class Ui_StartWindow(object):
         self.label_2.setText("Done")
         time.sleep(3)
 
-        print("Test accuracy score SVC : {:.3f}%".format(detector4.test_score()*100))
-        print("Test accuracy score RandomForestClassifier : {:.3f}%".format(detector2.test_score()*100))
-        print("Test accuracy score GradientBoostingClassifier : {:.3f}%".format(detector1.test_score()*100))
-        print("Test accuracy score KNeighborsClassifier : {:.3f}%".format(detector6.test_score()*100))
-        print("Test accuracy score MLPClassifier : {:.3f}%".format(detector3.test_score()*100))
-        print("Test accuracy score BaggingClassifier : {:.3f}%".format(detector5.test_score()*100))
+        print("Test accuracy score SVC : {:.3f}%".format(
+            detector4.test_score() * 100))
+        print("Test accuracy score RandomForestClassifier : {:.3f}%".format(
+            detector2.test_score() * 100))
+        print("Test accuracy score GradientBoostingClassifier : {:.3f}%".format(
+            detector1.test_score() * 100))
+        print("Test accuracy score KNeighborsClassifier : {:.3f}%".format(
+            detector6.test_score() * 100))
+        print("Test accuracy score MLPClassifier : {:.3f}%".format(
+            detector3.test_score() * 100))
+        print("Test accuracy score BaggingClassifier : {:.3f}%".format(
+            detector5.test_score() * 100))
+
 
 class PDFViewer(QMainWindow):
+
     def __init__(self, filename):
         super().__init__()
 
@@ -228,7 +269,7 @@ class PDFViewer(QMainWindow):
         self.label.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(self.label)
 
-        self.load_pdf("Report/"+filename)
+        self.load_pdf("Report/" + filename)
 
         self.prev_button = QPushButton("Previous Page", self)
         self.prev_button.clicked.connect(self.prev_page)
@@ -244,12 +285,15 @@ class PDFViewer(QMainWindow):
         self.show_page(self.current_page)
 
     def show_page(self, page_number):
-        if self.pdf_document is not None and 0 <= page_number < len(self.pdf_document):
+        if self.pdf_document is not None and 0 <= page_number < len(
+                self.pdf_document):
             page = self.pdf_document[page_number]
             image = page.get_pixmap()
-            qt_image = QImage(image.samples, image.width, image.height, image.stride, QImage.Format_RGB888)
+            qt_image = QImage(image.samples, image.width, image.height,
+                              image.stride, QImage.Format_RGB888)
             self.label.setPixmap(QPixmap.fromImage(qt_image))
-            self.setWindowTitle(f"PDF Viewer - Page {page_number + 1}/{len(self.pdf_document)}")
+            self.setWindowTitle(
+                f"PDF Viewer - Page {page_number + 1}/{len(self.pdf_document)}")
 
     def prev_page(self):
         if self.current_page > 0:
@@ -261,7 +305,9 @@ class PDFViewer(QMainWindow):
             self.current_page += 1
             self.show_page(self.current_page)
 
+
 class Ui_Export(QDialog):
+
     def __init__(self, filename):
         super().__init__()
         self.filename = filename
@@ -271,7 +317,7 @@ class Ui_Export(QDialog):
         self.label = QLabel(self)
         self.label.setGeometry(QRect(160, 50, 280, 50))
         self.label.setStyleSheet("font: 26pt \"Segoe UI\";\n"
-"color: rgb(255, 255, 255);")
+                                 "color: rgb(255, 255, 255);")
         self.label.setAlignment(Qt.AlignCenter)
         self.label.setObjectName("label")
         self.label.setText("Scan to download")
@@ -293,24 +339,25 @@ class Ui_Export(QDialog):
         self.pushButton.setFont(font)
         self.pushButton.setCursor(QCursor(Qt.PointingHandCursor))
         self.pushButton.setAutoFillBackground(False)
-        self.pushButton.setStyleSheet("QPushButton {\n"
-"color: rgb(255, 255, 255);\n"
-"font: 14pt \"Noto Sans\";\n"
-"text-align: center;\n"
-"border: 1px solid transparent;\n"
-"border-radius: 10px;\n"
-"    background-color: rgb(181, 99, 195);\n"
-"padding: 5px 10px;\n"
-"}\n"
-"\n"
-"QPushButton:hover {\n"
-"    background-color: rgb(153, 81, 166);\n"
-"}\n"
-"\n"
-"QPushButton:pressed {\n"
-"    background-color: rgb(120, 63, 131);\n"
-"}\n"
-"")
+        self.pushButton.setStyleSheet(
+            "QPushButton {\n"
+            "color: rgb(255, 255, 255);\n"
+            "font: 14pt \"Noto Sans\";\n"
+            "text-align: center;\n"
+            "border: 1px solid transparent;\n"
+            "border-radius: 10px;\n"
+            "    background-color: rgb(181, 99, 195);\n"
+            "padding: 5px 10px;\n"
+            "}\n"
+            "\n"
+            "QPushButton:hover {\n"
+            "    background-color: rgb(153, 81, 166);\n"
+            "}\n"
+            "\n"
+            "QPushButton:pressed {\n"
+            "    background-color: rgb(120, 63, 131);\n"
+            "}\n"
+            "")
         self.pushButton.setDefault(True)
         self.pushButton.setFlat(False)
         self.pushButton.setObjectName("pushButton")
@@ -322,7 +369,9 @@ class Ui_Export(QDialog):
         self.window = PDFViewer(self.filename)
         self.window.show()
 
+
 class Ui_MainWindow(object):
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1920, 1080)
@@ -347,7 +396,7 @@ class Ui_MainWindow(object):
         self.TitleLabel = QLabel(self.Topbar)
         self.TitleLabel.setGeometry(QRect(710, 0, 500, 80))
         self.TitleLabel.setStyleSheet("color: rgb(255, 255, 255);\n"
-                                        "font: 28pt \"Segoe UI\";")
+                                      "font: 28pt \"Segoe UI\";")
         self.TitleLabel.setObjectName("TitleLabel")
         self.TitleLabel.setText("Cosmo Clutch")
         self.TitleLabel.setAlignment(Qt.AlignCenter)
@@ -356,7 +405,8 @@ class Ui_MainWindow(object):
         self.Speech_label.setGeometry(QRect(1700, 0, 200, 80))
         self.Speech_label.setStyleSheet("color: rgb(255, 255, 255);\n"
                                         "font: 18pt \"Segoe UI\";")
-        self.Speech_label.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.Speech_label.setAlignment(Qt.AlignRight | Qt.AlignTrailing |
+                                       Qt.AlignVCenter)
         self.Speech_label.setObjectName("Speech_label")
         self.Speech_label.setText("Idle")
 
@@ -370,7 +420,8 @@ class Ui_MainWindow(object):
         self.FERframe = QFrame(self.frame_2)
         #orig self.FERframe.setGeometry(QRect(5, 10, 640, 480))
         self.FERframe.setGeometry(QRect(1270, 10, 640, 480))
-        self.FERframe.setStyleSheet("background-color: rgb(0, 0, 0); border-radius: 10px;")
+        self.FERframe.setStyleSheet(
+            "background-color: rgb(0, 0, 0); border-radius: 10px;")
         self.FERframe.setFrameShape(QFrame.StyledPanel)
         self.FERframe.setFrameShadow(QFrame.Raised)
         self.FERframe.setObjectName("FERframe")
@@ -382,11 +433,10 @@ class Ui_MainWindow(object):
         self.POSE_label = QLabel(self.frame_2)
         #orig self.POSE_label.setGeometry(QRect(1270, 10, 640, 480))
         self.POSE_label.setGeometry(QRect(5, 10, 640, 480))
-        self.POSE_label.setStyleSheet("background-color: rgb(0, 0, 0); border-radius: 10px;")
+        self.POSE_label.setStyleSheet(
+            "background-color: rgb(0, 0, 0); border-radius: 10px;")
         self.POSE_label.setObjectName("POSE_label")
 
-        
-        
         self.frame = QFrame(self.centralwidget)
         self.frame.setObjectName(u"frame")
         self.frame.setGeometry(QRect(0, 580, 1920, 451))
@@ -400,12 +450,18 @@ class Ui_MainWindow(object):
         self.canvas_Graphs = FigureCanvas(self.matplotlib_Graphs)
         self.canvas_Graphs.setParent(self.frame)
         self.canvas_Graphs.setGeometry(QRect(0, 5, 1915, 441))
-        self.canvas_Graphs.setStyleSheet("border: 2px solid black; border-radius: 10px; background-color: black;")
-        self.g1 =  self.matplotlib_Graphs.add_subplot(121)
-        self.g2 =  self.matplotlib_Graphs.add_subplot(122)
-        self.g1.set(xlabel='Time', ylabel='Emotion', title='Facial Emotion Recognition & Pose Estimation')
-        self.g2.set(xlabel='Time', ylabel='Emotion', title='Speech Emotion Recognition')
-        
+        self.canvas_Graphs.setStyleSheet(
+            "border: 2px solid black; border-radius: 10px; background-color: black;"
+        )
+        self.g1 = self.matplotlib_Graphs.add_subplot(121)
+        self.g2 = self.matplotlib_Graphs.add_subplot(122)
+        self.g1.set(xlabel='Time',
+                    ylabel='Emotion',
+                    title='Facial Emotion Recognition & Pose Estimation')
+        self.g2.set(xlabel='Time',
+                    ylabel='Emotion',
+                    title='Speech Emotion Recognition')
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setGeometry(QRect(0, 0, 1920, 21))
@@ -445,7 +501,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
 
         self.Worker1 = Worker1()
-        self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)  
+        self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
 
         self.Worker2 = Worker2()
 
@@ -467,8 +523,7 @@ class Ui_MainWindow(object):
         self.actionStart.setText(_translate("MainWindow", "Start"))
         self.actionStop.setText(_translate("MainWindow", "Stop"))
         self.actionExit.setText(_translate("MainWindow", "Exit"))
-        
-      
+
     def start_model(self):
         self.Worker1.start()
         self.Worker2.start()
@@ -481,7 +536,7 @@ class Ui_MainWindow(object):
         with open('details.txt', 'r') as file:
             self.details = file.read().split(',')
         self.filename = "data_" + self.details[0] + '_' + date + ".csv"
-        self.csv_file = open("CSV_data/"+self.filename, 'a', newline="")
+        self.csv_file = open("CSV_data/" + self.filename, 'a', newline="")
         self.writer = csv.writer(self.csv_file)
         self.writer.writerow(['Time', 'FER', 'POSE', "SER"])
 
@@ -499,15 +554,15 @@ class Ui_MainWindow(object):
 
     def export_data(self):
         generate_graph(self.filename)
-        FER_str=""
-        POSE_str=""
-        SER_str=""
-        PHY_str=""
-        Summary_str=""
-        bpm=0
-        systolic=0
-        diastolic=0
-        with open('CSV_data/'+self.filename, 'r') as file:
+        FER_str = ""
+        POSE_str = ""
+        SER_str = ""
+        PHY_str = ""
+        Summary_str = ""
+        bpm = 0
+        systolic = 0
+        diastolic = 0
+        with open('CSV_data/' + self.filename, 'r') as file:
             reader = csv.reader(file)
             #exclude header
             reader = list(reader)[1:]
@@ -517,10 +572,10 @@ class Ui_MainWindow(object):
                 systolic += int(row[5])
                 diastolic += int(row[6])
 
-            bpm = bpm/len(reader)
-            systolic = systolic/len(reader)
-            diastolic = diastolic/len(reader)
-        
+            bpm = bpm / len(reader)
+            systolic = systolic / len(reader)
+            diastolic = diastolic / len(reader)
+
         if bpm < 40 and systolic < 120:
             print('Depression')
             FER_str = content('FER', 'Depression')
@@ -528,7 +583,7 @@ class Ui_MainWindow(object):
             SER_str = content('SER', 'Depression')
             PHY_str = content('PHY', 'Depression')
             Summary_str = content('SUMMARY', 'Depression')
-        elif bpm >= 90 and systolic>=120 and diastolic >= 80:
+        elif bpm >= 90 and systolic >= 120 and diastolic >= 80:
             print('Anxiety')
             FER_str = content('FER', 'Anxiety')
             POSE_str = content('POSE', 'Anxiety')
@@ -542,7 +597,8 @@ class Ui_MainWindow(object):
             SER_str = content('SER', 'Normal')
             PHY_str = content('PHY', 'Normal')
             Summary_str = content('SUMMARY', 'Normal')
-        ufile = generate_report(self.details[0], FER_str, POSE_str, SER_str, PHY_str, Summary_str)
+        ufile = generate_report(self.details[0], FER_str, POSE_str, SER_str,
+                                PHY_str, Summary_str)
         # url = Azure_upload(ufile)
         # QR_gen(url)
         # SendMessage(self.details[1], self.details[0], url)
@@ -564,7 +620,7 @@ class Ui_MainWindow(object):
         if self.filename:
             # self.columns = ['Time', 'FER', 'POSE', "SER", "BPM", "Systolic", "Diastolic"]
             time_sec = time_sec_list[0]
-        
+
             with open('fer.txt', 'a') as f:
                 f.write(time_sec + ',' + str(final_model_op["fer"]) + '\n')
             with open('fer.txt', 'r') as f:
@@ -592,7 +648,10 @@ class Ui_MainWindow(object):
             with open('speech.txt', 'w') as f:
                 f.writelines(lines)
 
-            self.writer.writerow([time_sec, final_model_op["fer"], final_model_op["pose"], final_model_op["speech"]])
+            self.writer.writerow([
+                time_sec, final_model_op["fer"], final_model_op["pose"],
+                final_model_op["speech"]
+            ])
 
             time_sec_list[0] = str(int(time_sec_list[0]) + 1)
 
@@ -601,20 +660,20 @@ class Ui_MainWindow(object):
         emotions = ['Neutral', 'Angry', 'Happy', 'Sad', 'Surprise', 'None']
         self.g1.clear()
         self.g2.clear()
-        with open( 'fer.txt', 'r') as graph_data:
+        with open('fer.txt', 'r') as graph_data:
             lines = graph_data.read().split('\n')
             x_fer = []
             y_fer = []
-            for line in lines :
+            for line in lines:
                 if len(line) > 1:
                     x, y = line.split(',')
                     x_fer.append(x)
                     y_fer.append(y)
-        with open( 'pose.txt', 'r') as graph_data:
+        with open('pose.txt', 'r') as graph_data:
             lines = graph_data.read().split('\n')
             x_pose = []
             y_pose = []
-            for line in lines :
+            for line in lines:
                 if len(line) > 1:
                     x, y = line.split(',')
                     x_pose.append(x)
@@ -623,36 +682,44 @@ class Ui_MainWindow(object):
         self.g1.plot(x_pose, y_pose, color='red', label='POSE')
         self.g1.legend()
         self.g1.set_yticks(emotions)
-        self.g1.set(xlabel='Time', ylabel='Emotion', title='Facial Emotion Recognition & Pose Estimation')
-        with open( 'speech.txt', 'r') as graph_data:
+        self.g1.set(xlabel='Time',
+                    ylabel='Emotion',
+                    title='Facial Emotion Recognition & Pose Estimation')
+        with open('speech.txt', 'r') as graph_data:
             lines = graph_data.read().split('\n')
             x_speech = []
             y_speech = []
-            for line in lines :
+            for line in lines:
                 if len(line) > 1:
                     x, y = line.split(',')
                     x_speech.append(x)
                     y_speech.append(y)
         self.g2.plot(x_speech, y_speech, color='red')
         self.g2.set_yticks(emotions)
-        self.g2.set(xlabel='Time', ylabel='Emotion', title='Speech Emotion Recognition')
+        self.g2.set(xlabel='Time',
+                    ylabel='Emotion',
+                    title='Speech Emotion Recognition')
         self.canvas_Graphs.draw()
+
     def aud_anim(self):
         self.ax1.clear()
         self.ax2.clear()
-        file_path = 'test.wav'  
+        file_path = 'test.wav'
         y, sr = librosa.load(file_path)
         self.ax2 = self.audio_graphs.add_subplot(212)
         self.mel_spectrogram = librosa.feature.melspectrogram(y=y, sr=sr)
         librosa.display.waveshow(y, sr=sr)
         self.ax2.set_title('Wave plot')
         self.ax1 = self.audio_graphs.add_subplot(311)
-        librosa.display.specshow(librosa.power_to_db(self.mel_spectrogram, ref=np.max), y_axis='mel', x_axis='time')
+        librosa.display.specshow(librosa.power_to_db(self.mel_spectrogram,
+                                                     ref=np.max),
+                                 y_axis='mel',
+                                 x_axis='time')
         self.ax1.set_title('Mel Spectrogram')
 
     # def update_txt(self):
     #     time_sec = time_sec_list[0]
-        
+
     #     with open('fer.txt', 'a') as f:
     #         f.write(time_sec + ',' + str(final_model_op["fer"]) + '\n')
     #     with open('fer.txt', 'r') as f:
@@ -682,42 +749,41 @@ class Ui_MainWindow(object):
 
     #     time_sec_list[0] = str(int(time_sec_list[0]) + 1)
 
+
 def FER():
 
     frame = input_frame[0].copy()
-    gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-    faces = face_classifier.detectMultiScale(gray,1.3,5)
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = face_classifier.detectMultiScale(gray, 1.3, 5)
     label = None
-    for (x,y,w,h) in faces:
-        cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
-        roi_gray = gray[y:y+h,x:x+w]
-        roi_gray = cv2.resize(roi_gray,(48,48),interpolation=cv2.INTER_AREA)
+    for (x, y, w, h) in faces:
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        roi_gray = gray[y:y + h, x:x + w]
+        roi_gray = cv2.resize(roi_gray, (48, 48), interpolation=cv2.INTER_AREA)
 
-        if np.sum([roi_gray])!=0:
-            roi = roi_gray.astype('float')/255.0
+        if np.sum([roi_gray]) != 0:
+            roi = roi_gray.astype('float') / 255.0
             roi = img_to_array(roi)
-            roi = np.expand_dims(roi,axis=0)
+            roi = np.expand_dims(roi, axis=0)
 
             preds = classifier.predict(roi)[0]
-            if preds.argmax()!=0:
-                label=class_labels[preds.argmax()]
-            label_position = (x,y)
-            cv2.putText(frame,label,label_position,cv2.FONT_HERSHEY_SIMPLEX,2,(0,255,0),3)
+            if preds.argmax() != 0:
+                label = class_labels[preds.argmax()]
+            label_position = (x, y)
+            cv2.putText(frame, label, label_position, cv2.FONT_HERSHEY_SIMPLEX,
+                        2, (0, 255, 0), 3)
         else:
-            label="No Face Found"
-            cv2.putText(frame,'No Face Found',(20,60),cv2.FONT_HERSHEY_SIMPLEX,2,(0,255,0),3)
+            label = "No Face Found"
+            cv2.putText(frame, 'No Face Found', (20, 60),
+                        cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3)
     final_model_op["fer"] = label
-    result_frames[0] = {'frame' : frame, 'label' : label}
+    result_frames[0] = {'frame': frame, 'label': label}
+
 
 def POSE():
-    
+
     # Define the emotion labels
-    emotion_labels = {
-        "Happy": 0,
-        "Sad": 0,
-        "Angry": 0,
-        "Neutral": 0
-    }
+    emotion_labels = {"Happy": 0, "Sad": 0, "Angry": 0, "Neutral": 0}
 
     # Define the thresholds for emotion detection
     happy_threshold = 160
@@ -753,20 +819,21 @@ def POSE():
         vector1 = [a.x - b.x, a.y - b.y]
         vector2 = [c.x - b.x, c.y - b.y]
         dot_product = vector1[0] * vector2[0] + vector1[1] * vector2[1]
-        magnitude1 = (vector1[0] ** 2 + vector1[1] ** 2) ** 0.5
-        magnitude2 = (vector2[0] ** 2 + vector2[1] ** 2) ** 0.5
+        magnitude1 = (vector1[0]**2 + vector1[1]**2)**0.5
+        magnitude2 = (vector2[0]**2 + vector2[1]**2)**0.5
         cosine_angle = dot_product / (magnitude1 * magnitude2)
         angle = np.arccos(cosine_angle)
         return np.degrees(angle)
-    
-    frame=input_frame[0].copy()
+
+    frame = input_frame[0].copy()
     # frame = cv2.flip(frame, 1)
 
     # Convert the BGR image to RGB
     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     # Set flag to enable drawing landmarks on the image
-    drawing_spec = mp.solutions.drawing_utils.DrawingSpec(thickness=1, circle_radius=1)
+    drawing_spec = mp.solutions.drawing_utils.DrawingSpec(thickness=1,
+                                                          circle_radius=1)
 
     # Detect pose landmarks
     results = pose.process(image)
@@ -786,13 +853,20 @@ def POSE():
 
     # Convert the RGB image back to BGR
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    final_model_op["pose"] = max(zip(emotion_labels.values(), emotion_labels.keys()))[1]
-    result_frames[1] = {'frame' : image, 'label' : max(zip(emotion_labels.values(), emotion_labels.keys()))[1]}
-        
+    final_model_op["pose"] = max(
+        zip(emotion_labels.values(), emotion_labels.keys()))[1]
+    result_frames[1] = {
+        'frame': image,
+        'label': max(zip(emotion_labels.values(), emotion_labels.keys()))[1]
+    }
+
+
 class Worker1(QThread):
     ImageUpdate = pyqtSignal(list)
+
     def __init__(self):
         super(Worker1, self).__init__()
+
     def run(self):
         self.ThreadActive = True
         Capture = cv2.VideoCapture(0)
@@ -803,34 +877,55 @@ class Worker1(QThread):
                 FER()
                 POSE()
 
-                fer_op = cv2.cvtColor(result_frames[0]['frame'], cv2.COLOR_BGR2RGB)
-                fer_qt = QImage(fer_op.data, fer_op.shape[1], fer_op.shape[0], QImage.Format_RGB888)
-                pose_op = cv2.cvtColor(result_frames[1]['frame'], cv2.COLOR_BGR2RGB)
-                pose_qt = QImage(pose_op.data, pose_op.shape[1], pose_op.shape[0], QImage.Format_RGB888)
+                fer_op = cv2.cvtColor(result_frames[0]['frame'],
+                                      cv2.COLOR_BGR2RGB)
+                fer_qt = QImage(fer_op.data, fer_op.shape[1], fer_op.shape[0],
+                                QImage.Format_RGB888)
+                pose_op = cv2.cvtColor(result_frames[1]['frame'],
+                                       cv2.COLOR_BGR2RGB)
+                pose_qt = QImage(pose_op.data, pose_op.shape[1],
+                                 pose_op.shape[0], QImage.Format_RGB888)
 
                 fer_Pic = fer_qt.scaled(640, 480, Qt.KeepAspectRatio)
                 pose_Pic = pose_qt.scaled(640, 480, Qt.KeepAspectRatio)
 
-                op_list = [{'label' : result_frames[0]['label'], 'frame' : fer_Pic}, {'label' : result_frames[1]['label'], 'frame' : pose_Pic}]
+                op_list = [{
+                    'label': result_frames[0]['label'],
+                    'frame': fer_Pic
+                }, {
+                    'label': result_frames[1]['label'],
+                    'frame': pose_Pic
+                }]
                 self.ImageUpdate.emit(op_list)
+
     def stop(self):
         self.ThreadActive = False
         self.quit()
         self.wait()
 
+
 class Worker2(QThread):
     global main_ui
     EmotionUpdate = pyqtSignal(str)
+
     def __init__(self):
         super(Worker2, self).__init__()
+
     def run(self):
         self.ThreadActive = True
         print("Please talk")
-        
+
         while self.ThreadActive:
             record_to_file("test.wav")
             # main_ui.aud_anim()
-            results = [detector1.predict("test.wav"), detector2.predict("test.wav"), detector3.predict("test.wav"), detector4.predict("test.wav"), detector5.predict("test.wav"), detector6.predict("test.wav")]
+            results = [
+                detector1.predict("test.wav"),
+                detector2.predict("test.wav"),
+                detector3.predict("test.wav"),
+                detector4.predict("test.wav"),
+                detector5.predict("test.wav"),
+                detector6.predict("test.wav")
+            ]
             result = find_final_emotion(results)
             result = result.capitalize()
             print(result, results)
@@ -851,21 +946,5 @@ if __name__ == "__main__":
     ui.setupUi(StartWindow)
     StartWindow.show()
     # Window.showMaximized()
-    
+
     sys.exit(app.exec_())
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -24,19 +24,26 @@ SCOPES = 'https://www.googleapis.com/auth/gmail.send'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Gmail API Python Send Email'
 
+
 def generate_graph(filename):
     # data1 = pd.read_csv('CSV_data/'+filename, dtype={'Time': str, 'FER': str, 'POSE': str, 'SER': str, 'BPM' : str, 'Systolic' : str, 'Diastolic' : str})
-    data1 = pd.read_csv('CSV_data/'+filename, dtype={'Time': str, 'FER': str, 'POSE': str, 'SER': str})
+    data1 = pd.read_csv('CSV_data/' + filename,
+                        dtype={
+                            'Time': str,
+                            'FER': str,
+                            'POSE': str,
+                            'SER': str
+                        })
     emotions = ['Neutral', 'Angry', 'Happy', 'Sad', 'Surprise']
     emotions_labels = ['Neutral', 'Angry', 'Happy', 'Sad', 'Surprise']
     plt.style.use("cyberpunk")
     # plt.rcParams['figure.facecolor'] = '#1f1f1f'
     # plt.rcParams['axes.facecolor'] = '#1f1f1f'
-    
+
     # plt.gca().autoscale(enable=True, axis='x', tight=True)
     # mplcyberpunk.make_lines_glow(plt.gca())
 
-    plt.figure(figsize=(16/2.54, 10/2.54))
+    plt.figure(figsize=(16 / 2.54, 10 / 2.54))
     plt.autoscale(enable=True, axis='x')
     plt.grid(True)
     plt.title('Facial Emotion Recognition')
@@ -48,10 +55,13 @@ def generate_graph(filename):
     plt.gca().set_facecolor('none')
     mplcyberpunk.add_glow_effects()
     plt.yticks(emotions, emotions_labels)
-    plt.savefig('Graphs/FER_plot.png', transparent=True, bbox_inches='tight', pad_inches=0)
+    plt.savefig('Graphs/FER_plot.png',
+                transparent=True,
+                bbox_inches='tight',
+                pad_inches=0)
     plt.clf()
 
-    plt.figure(figsize=(16/2.54, 10/2.54))
+    plt.figure(figsize=(16 / 2.54, 10 / 2.54))
     plt.autoscale(enable=True, axis='x')
     plt.grid(True)
     plt.title('Posture Estimation and Emotion Recognition')
@@ -63,10 +73,13 @@ def generate_graph(filename):
     plt.gca().set_facecolor('none')
     mplcyberpunk.add_glow_effects()
     plt.yticks(emotions, emotions_labels)
-    plt.savefig('Graphs/POSE_plot.png', transparent=True, bbox_inches='tight', pad_inches=0)
+    plt.savefig('Graphs/POSE_plot.png',
+                transparent=True,
+                bbox_inches='tight',
+                pad_inches=0)
     plt.clf()
 
-    plt.figure(figsize=(16/2.54, 10/2.54))
+    plt.figure(figsize=(16 / 2.54, 10 / 2.54))
     plt.autoscale(enable=True, axis='x')
     plt.grid(True)
     plt.title('Voice Emotion Recognition')
@@ -78,54 +91,81 @@ def generate_graph(filename):
     plt.gca().set_facecolor('none')
     mplcyberpunk.add_glow_effects()
     plt.yticks(emotions, emotions_labels)
-    plt.savefig('Graphs/SER_plot.png', transparent=True, bbox_inches='tight', pad_inches=0)
+    plt.savefig('Graphs/SER_plot.png',
+                transparent=True,
+                bbox_inches='tight',
+                pad_inches=0)
     plt.clf()
 
-def generate_report(name, fer_text, pose_text, ser_text, phy_text, summary_text):
+
+def generate_report(name, fer_text, pose_text, ser_text, phy_text,
+                    summary_text):
     pdf_document = fitz.open('Report/template/test_report.pdf')
 
-    x_position_img = 65  
-    y_position_img = 120 
-    width = 480  
+    x_position_img = 65
+    y_position_img = 120
+    width = 480
     height = 400
     x_position_text = 45
     y_position_text = 530
-    image_rect = fitz.Rect(x_position_img, y_position_img, x_position_img + width, y_position_img + height)
-    text_rect = fitz.Rect(x_position_text, y_position_text, x_position_text + 450, y_position_text + 300)
+    image_rect = fitz.Rect(x_position_img, y_position_img,
+                           x_position_img + width, y_position_img + height)
+    text_rect = fitz.Rect(x_position_text, y_position_text,
+                          x_position_text + 450, y_position_text + 300)
 
     custom_font_path = "TT-Interphases-R.ttf"
 
     cover_page = pdf_document[0]
     cover_page.wrap_contents()
-    image_path='logo.png'
+    image_path = 'logo.png'
     img = open(image_path, 'rb').read()
-    cover_page.insert_image(fitz.Rect(380, 0, 580, 200), stream=img, xref=0 )  
+    cover_page.insert_image(fitz.Rect(380, 0, 580, 200), stream=img, xref=0)
     cover_page.insert_font(fontname="TT", fontfile=custom_font_path)
-    cover_page.insert_textbox(fitz.Rect(100, 650, 500, 800), name, fontsize=18, fontname="TT", color=(1,1,1), align=fitz.TEXT_ALIGN_LEFT)
-    
+    cover_page.insert_textbox(fitz.Rect(100, 650, 500, 800),
+                              name,
+                              fontsize=18,
+                              fontname="TT",
+                              color=(1, 1, 1),
+                              align=fitz.TEXT_ALIGN_LEFT)
+
     FER_page = pdf_document[2]
     FER_page.wrap_contents()
-    image_path='Graphs/FER_plot.png'
+    image_path = 'Graphs/FER_plot.png'
     img = open(image_path, "rb").read()
-    FER_page.insert_image(image_rect, stream=img, xref=0 )
+    FER_page.insert_image(image_rect, stream=img, xref=0)
     FER_page.insert_font(fontname="TT", fontfile=custom_font_path)
-    FER_page.insert_textbox(text_rect, fer_text, fontsize=14, fontname="TT", color=(1,1,1), align=fitz.TEXT_ALIGN_JUSTIFY)
+    FER_page.insert_textbox(text_rect,
+                            fer_text,
+                            fontsize=14,
+                            fontname="TT",
+                            color=(1, 1, 1),
+                            align=fitz.TEXT_ALIGN_JUSTIFY)
 
     POSE_page = pdf_document[3]
     POSE_page.wrap_contents()
-    image_path='Graphs/POSE_plot.png'
+    image_path = 'Graphs/POSE_plot.png'
     img = open(image_path, "rb").read()
-    POSE_page.insert_image(image_rect, stream=img, xref=0 )
+    POSE_page.insert_image(image_rect, stream=img, xref=0)
     POSE_page.insert_font(fontname="TT", fontfile=custom_font_path)
-    POSE_page.insert_textbox(text_rect, pose_text, fontsize=14, fontname="TT", color=(1,1,1), align=fitz.TEXT_ALIGN_JUSTIFY)
-    
+    POSE_page.insert_textbox(text_rect,
+                             pose_text,
+                             fontsize=14,
+                             fontname="TT",
+                             color=(1, 1, 1),
+                             align=fitz.TEXT_ALIGN_JUSTIFY)
+
     SER_page = pdf_document[4]
     SER_page.wrap_contents()
-    image_path='Graphs/SER_plot.png'
+    image_path = 'Graphs/SER_plot.png'
     img = open(image_path, "rb").read()
-    SER_page.insert_image(image_rect, stream=img, xref=0 )
+    SER_page.insert_image(image_rect, stream=img, xref=0)
     SER_page.insert_font(fontname="TT", fontfile=custom_font_path)
-    SER_page.insert_textbox(text_rect, ser_text, fontsize=14, fontname="TT", color=(1,1,1), align=fitz.TEXT_ALIGN_JUSTIFY)
+    SER_page.insert_textbox(text_rect,
+                            ser_text,
+                            fontsize=14,
+                            fontname="TT",
+                            color=(1, 1, 1),
+                            align=fitz.TEXT_ALIGN_JUSTIFY)
 
     # PHY_page = pdf_document[5]
     # PHY_page.wrap_contents()
@@ -138,12 +178,18 @@ def generate_report(name, fer_text, pose_text, ser_text, phy_text, summary_text)
     Summary_page = pdf_document[5]
     Summary_page.wrap_contents()
     Summary_page.insert_font(fontname="TT", fontfile=custom_font_path)
-    Summary_page.insert_textbox(fitz.Rect(45, 180, 500, 800), summary_text, fontsize=18, fontname="TT", color=(1,1,1), align=fitz.TEXT_ALIGN_LEFT)
-    
+    Summary_page.insert_textbox(fitz.Rect(45, 180, 500, 800),
+                                summary_text,
+                                fontsize=18,
+                                fontname="TT",
+                                color=(1, 1, 1),
+                                align=fitz.TEXT_ALIGN_LEFT)
+
     date = datetime.now().strftime("%d-%m-%Y_%H-%M")
-    pdf_document.save('Report/'+name+"_"+date+'.pdf')
+    pdf_document.save('Report/' + name + "_" + date + '.pdf')
     pdf_document.close()
-    return name+"_"+date+'.pdf'
+    return name + "_" + date + '.pdf'
+
 
 def Azure_upload(filename):
     pass
@@ -162,7 +208,8 @@ def Azure_upload(filename):
     print(f"File '{local_file_path}' uploaded to '{blob_name}' in '{container_name}'.")
     url =  f"https://{storage_account_name}.blob.core.windows.net/{container_name}/{blob_name}"
     return url'''
-    
+
+
 def QR_gen(url):
     pass
     '''storage_account_name = "cosmocareai"
@@ -195,6 +242,7 @@ def QR_gen(url):
 
     print(f"QR code generated")'''
 
+
 def get_credentials():
     home_dir = os.path.expanduser('~')
     credential_dir = os.path.join(home_dir, '.credentials')
@@ -211,11 +259,12 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
+
 def SendMessage(to, name, url):
     subject = "CosmoCare AI - Report"
     sender = "cosmocareai@gmail.com"
     email_html = open("email.html")
-    msgHtml = email_html.read().format_map({'name' : name, 'url' : url})
+    msgHtml = email_html.read().format_map({'name': name, 'url': url})
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('gmail', 'v1', http=http)
@@ -223,15 +272,18 @@ def SendMessage(to, name, url):
     result = SendMessageInternal(service, "me", message1)
     return result
 
+
 def SendMessageInternal(service, user_id, message):
     try:
-        message = (service.users().messages().send(userId=user_id, body=message).execute())
+        message = (service.users().messages().send(userId=user_id,
+                                                   body=message).execute())
         print('Message Id: %s' % message['id'])
         return message
     except errors.HttpError as error:
         print('An error occurred: %s' % error)
         return "Error"
     return "OK"
+
 
 def CreateMessageHtml(sender, to, subject, msgHtml, msgPlain):
     msg = MIMEMultipart('alternative')
@@ -240,7 +292,12 @@ def CreateMessageHtml(sender, to, subject, msgHtml, msgPlain):
     msg['To'] = to
     msg.attach(MIMEText(msgPlain, 'plain'))
     msg.attach(MIMEText(msgHtml, 'html'))
-    return {'raw': base64.urlsafe_b64encode(msg.as_string().encode('utf-8')).decode('utf-8')}
+    return {
+        'raw':
+            base64.urlsafe_b64encode(msg.as_string().encode('utf-8')
+                                    ).decode('utf-8')
+    }
+
 
 def content(analysis, state):
     if state == "Normal":
@@ -254,7 +311,7 @@ def content(analysis, state):
             return "Heart Rate: Your resting heart rate remains within the healthy range of 60 to 80 BPM, indicating a calm and composed state of mind.\n\nHeart Rate Variability: The variability in your heart rate signifies emotional resilience and adaptability, further affirming your positive mental state.\n\nBlood Pressure: Your blood pressure consistently remains within the normal range of 120/80 mmHg, demonstrating a balanced emotional state and overall health."
         elif analysis == 'SUMMARY':
             return "In light of the data collected and the comprehensive analysis conducted by CosmoCareAI, we are pleased to certify that your mental fitness is within the normal range for an astronaut preparing for future space missions. The synchronization between your emotional expressions, voice patterns, body posture, and physiological parameters paints a consistent picture of positive mental well-being. You exhibit emotional resilience, adaptability, and excellent psychological balance, essential qualities for thriving in the demanding environment of space exploration.\n\n\nWe trust that this comprehensive report serves as a testament to your dedication and commitment to maintaining exceptional mental health. Should you require any further support or counseling, our team of experts is readily available to assist you on your journey. Wishing you continued success and a bright future in your endeavors."
-        
+
     elif state == "Depression":
         if analysis == 'FER':
             return "CosmoCareAI has detected a consistent prevalence of sad emotions in your facial expressions, suggesting a shift from the anticipated emotional equilibrium."
@@ -280,7 +337,8 @@ def content(analysis, state):
             return "In light of the data and analysis provided by CosmoCareAI, it is noteworthy that your mental fitness is subtly deviating from the expected norm, suggesting the presence of nascent anxiety. While not yet indicative of a severe anxiety state, the convergence of subtle emotional indicators with physiological deviations merits your attention.\n\nWe recommend vigilance and continued monitoring of your mental well-being. Space missions are demanding endeavors, and early recognition of emotional patterns is crucial for your well-being and the success of future missions. Please feel free to reach out to our support team for guidance and assistance as we continue to refine our understanding of these emerging patterns. Your commitment to space exploration is commendable, and we are here to support you in every aspect of your journey."
     else:
         return ""
-    
+
+
 '''if __name__ == '__main__':
 
-    Azure_upload("Sandeep Adithya_24-09-2023_22-45 copy.pdf")'''                                                                                                                                                                              
+    Azure_upload("Sandeep Adithya_24-09-2023_22-45 copy.pdf")'''

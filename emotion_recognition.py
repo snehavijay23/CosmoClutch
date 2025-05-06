@@ -17,6 +17,7 @@ import pandas as pd
 
 
 class EmotionRecognizer:
+
     def __init__(self, model=None, **kwargs):
         self.emotions = kwargs.get("emotions", ["sad", "neutral", "happy"])
         self._verify_emotions()
@@ -28,13 +29,14 @@ class EmotionRecognizer:
 
         if not self.tess_ravdess and not self.emodb and not self.custom_db:
             self.tess_ravdess = True
-    
+
         self.classification = kwargs.get("classification", True)
         self.balance = kwargs.get("balance", True)
         self.override_csv = kwargs.get("override_csv", True)
         self.verbose = kwargs.get("verbose", 1)
 
-        self.tess_ravdess_name = kwargs.get("tess_ravdess_name", "tess_ravdess.csv")
+        self.tess_ravdess_name = kwargs.get("tess_ravdess_name",
+                                            "tess_ravdess.csv")
         self.emodb_name = kwargs.get("emodb_name", "emodb.csv")
         self.custom_db_name = kwargs.get("custom_db_name", "custom.csv")
 
@@ -65,7 +67,7 @@ class EmotionRecognizer:
 
         # set them to be object attributes
         self.train_desc_files = train_desc_files
-        self.test_desc_files  = test_desc_files
+        self.test_desc_files = test_desc_files
 
     def _verify_emotions(self):
 
@@ -77,30 +79,44 @@ class EmotionRecognizer:
 
     def write_csv(self):
 
-        for train_csv_file, test_csv_file in zip(self.train_desc_files, self.test_desc_files):
+        for train_csv_file, test_csv_file in zip(self.train_desc_files,
+                                                 self.test_desc_files):
             # not safe approach
             if os.path.isfile(train_csv_file) and os.path.isfile(test_csv_file):
                 # file already exists, just skip writing csv files
                 if not self.override_csv:
                     continue
             if self.emodb_name in train_csv_file:
-                write_emodb_csv(self.emotions, train_name=train_csv_file, test_name=test_csv_file, verbose=self.verbose)
+                write_emodb_csv(self.emotions,
+                                train_name=train_csv_file,
+                                test_name=test_csv_file,
+                                verbose=self.verbose)
                 if self.verbose:
                     print("[+] Generated EMO-DB CSV File")
             elif self.tess_ravdess_name in train_csv_file:
-                write_tess_ravdess_csv(self.emotions, train_name=train_csv_file, test_name=test_csv_file, verbose=self.verbose)
+                write_tess_ravdess_csv(self.emotions,
+                                       train_name=train_csv_file,
+                                       test_name=test_csv_file,
+                                       verbose=self.verbose)
                 if self.verbose:
                     print("[+] Generated TESS & RAVDESS DB CSV File")
             elif self.custom_db_name in train_csv_file:
-                write_custom_csv(emotions=self.emotions, train_name=train_csv_file, test_name=test_csv_file, verbose=self.verbose)
+                write_custom_csv(emotions=self.emotions,
+                                 train_name=train_csv_file,
+                                 test_name=test_csv_file,
+                                 verbose=self.verbose)
                 if self.verbose:
                     print("[+] Generated Custom DB CSV File")
 
     def load_data(self):
 
         if not self.data_loaded:
-            result = load_data(self.train_desc_files, self.test_desc_files, self.audio_config, self.classification,
-                                emotions=self.emotions, balance=self.balance)
+            result = load_data(self.train_desc_files,
+                               self.test_desc_files,
+                               self.audio_config,
+                               self.classification,
+                               emotions=self.emotions,
+                               balance=self.balance)
             self.X_train = result['X_train']
             self.X_test = result['X_test']
             self.y_train = result['y_train']
@@ -125,26 +141,33 @@ class EmotionRecognizer:
 
     def predict(self, audio_path):
 
-        feature = extract_feature(audio_path, **self.audio_config).reshape(1, -1)
+        feature = extract_feature(audio_path,
+                                  **self.audio_config).reshape(1, -1)
         return self.model.predict(feature)[0]
 
     def predict_proba(self, audio_path):
 
         if self.classification:
-            feature = extract_feature(audio_path, **self.audio_config).reshape(1, -1)
+            feature = extract_feature(audio_path,
+                                      **self.audio_config).reshape(1, -1)
             proba = self.model.predict_proba(feature)[0]
             result = {}
             for emotion, prob in zip(self.model.classes_, proba):
                 result[emotion] = prob
             return result
         else:
-            raise NotImplementedError("Probability prediction doesn't make sense for regression")
+            raise NotImplementedError(
+                "Probability prediction doesn't make sense for regression")
 
     def grid_search(self, params, n_jobs=2, verbose=1):
 
         score = accuracy_score if self.classification else mean_absolute_error
-        grid = GridSearchCV(estimator=self.model, param_grid=params, scoring=make_scorer(score),
-                            n_jobs=n_jobs, verbose=verbose, cv=3)
+        grid = GridSearchCV(estimator=self.model,
+                            param_grid=params,
+                            scoring=make_scorer(score),
+                            n_jobs=n_jobs,
+                            verbose=verbose,
+                            cv=3)
         grid_result = grid.fit(self.X_train, self.y_train)
         return grid_result.best_estimator_, grid_result.best_params_, grid_result.best_score_
 
@@ -152,7 +175,7 @@ class EmotionRecognizer:
 
         if not self.data_loaded:
             self.load_data()
-        
+
         estimators = self.get_best_estimators()
 
         result = []
@@ -162,29 +185,42 @@ class EmotionRecognizer:
 
         for estimator, params, cv_score in estimators:
             if self.verbose:
-                estimators.set_description(f"Evaluating {estimator.__class__.__name__}")
-            detector = EmotionRecognizer(estimator, emotions=self.emotions, tess_ravdess=self.tess_ravdess,
-                                        emodb=self.emodb, custom_db=self.custom_db, classification=self.classification,
-                                        features=self.features, balance=self.balance, override_csv=False)
+                estimators.set_description(
+                    f"Evaluating {estimator.__class__.__name__}")
+            detector = EmotionRecognizer(estimator,
+                                         emotions=self.emotions,
+                                         tess_ravdess=self.tess_ravdess,
+                                         emodb=self.emodb,
+                                         custom_db=self.custom_db,
+                                         classification=self.classification,
+                                         features=self.features,
+                                         balance=self.balance,
+                                         override_csv=False)
             detector.X_train = self.X_train
-            detector.X_test  = self.X_test
+            detector.X_test = self.X_test
             detector.y_train = self.y_train
-            detector.y_test  = self.y_test
+            detector.y_test = self.y_test
             detector.data_loaded = True
             detector.train(verbose=0)
             accuracy = detector.test_score()
             result.append((detector.model, accuracy))
 
-        result = sorted(result, key=lambda item: item[1], reverse=self.classification)
+        result = sorted(result,
+                        key=lambda item: item[1],
+                        reverse=self.classification)
         best_estimator = result[0][0]
         accuracy = result[0][1]
         self.model = best_estimator
         self.model_trained = True
         if self.verbose:
             if self.classification:
-                print(f"[+] Best model determined: {self.model.__class__.__name__} with {accuracy*100:.3f}% test accuracy")
+                print(
+                    f"[+] Best model determined: {self.model.__class__.__name__} with {accuracy*100:.3f}% test accuracy"
+                )
             else:
-                print(f"[+] Best model determined: {self.model.__class__.__name__} with {accuracy:.5f} mean absolute error")
+                print(
+                    f"[+] Best model determined: {self.model.__class__.__name__} with {accuracy:.5f} mean absolute error"
+                )
 
     def test_score(self):
         y_pred = self.model.predict(self.X_test)
@@ -210,17 +246,22 @@ class EmotionRecognizer:
 
     def confusion_matrix(self, percentage=True, labeled=True):
         if not self.classification:
-            raise NotImplementedError("Confusion matrix works only when it is a classification problem")
+            raise NotImplementedError(
+                "Confusion matrix works only when it is a classification problem"
+            )
         y_pred = self.model.predict(self.X_test)
-        matrix = confusion_matrix(self.y_test, y_pred, labels=self.emotions).astype(np.float32)
+        matrix = confusion_matrix(self.y_test, y_pred,
+                                  labels=self.emotions).astype(np.float32)
         if percentage:
             for i in range(len(matrix)):
                 matrix[i] = matrix[i] / np.sum(matrix[i])
             # make it percentage
             matrix *= 100
         if labeled:
-            matrix = pd.DataFrame(matrix, index=[ f"true_{e}" for e in self.emotions ],
-                                    columns=[ f"predicted_{e}" for e in self.emotions ])
+            matrix = pd.DataFrame(
+                matrix,
+                index=[f"true_{e}" for e in self.emotions],
+                columns=[f"predicted_{e}" for e in self.emotions])
         return matrix
 
     def draw_confusion_matrix(self):
@@ -247,11 +288,16 @@ class EmotionRecognizer:
             train_samples.append(n_train)
             test_samples.append(n_test)
             total.append(n_train + n_test)
-        
+
         total.append(sum(train_samples) + sum(test_samples))
         train_samples.append(sum(train_samples))
         test_samples.append(sum(test_samples))
-        return pd.DataFrame(data={"train": train_samples, "test": test_samples, "total": total}, index=self.emotions + ["total"])
+        return pd.DataFrame(data={
+            "train": train_samples,
+            "test": test_samples,
+            "total": total
+        },
+                            index=self.emotions + ["total"])
 
     def get_random_emotion(self, emotion, partition="train"):
         if partition == "train":
@@ -263,7 +309,8 @@ class EmotionRecognizer:
             while self.y_train[index] != emotion:
                 index = random.choice(list(range(len(self.y_test))))
         else:
-            raise TypeError("Unknown partition, only 'train' or 'test' is accepted")
+            raise TypeError(
+                "Unknown partition, only 'train' or 'test' is accepted")
 
         return index
 
@@ -304,12 +351,13 @@ def plot_histograms(classifiers=True, beta=0.5, n_classes=3, verbose=1):
             result['f_train'] = detector.train_fbeta_score(beta)
             result['f_test'] = detector.test_fbeta_score(beta)
             if verbose:
-                print(f"[+] {estimator.__class__.__name__} with {sample_size*100}% ({n_train_samples}) data samples achieved {cv_score*100:.3f}% Validation Score in {t_train:.3f}s & {test_accuracy*100:.3f}% Test Score in {t_test:.3f}s")
+                print(
+                    f"[+] {estimator.__class__.__name__} with {sample_size*100}% ({n_train_samples}) data samples achieved {cv_score*100:.3f}% Validation Score in {t_train:.3f}s & {test_accuracy*100:.3f}% Test Score in {t_test:.3f}s"
+                )
             final_result[estimator.__class__.__name__].append(result)
         if verbose:
             print()
     visualize(final_result, n_classes=n_classes)
-    
 
 
 def visualize(results, n_classes):
@@ -318,18 +366,26 @@ def visualize(results, n_classes):
 
     accuracy = 1 / n_classes
     f1 = 1 / n_classes
-    fig, ax = pl.subplots(2, 4, figsize = (11,7))
+    fig, ax = pl.subplots(2, 4, figsize=(11, 7))
     bar_width = 0.4
-    colors = [ (random.random(), random.random(), random.random()) for _ in range(n_estimators) ]
+    colors = [(random.random(), random.random(), random.random())
+              for _ in range(n_estimators)]
     for k, learner in enumerate(results.keys()):
-        for j, metric in enumerate(['train_time', 'acc_train', 'f_train', 'pred_time', 'acc_test', 'f_test']):
+        for j, metric in enumerate([
+                'train_time', 'acc_train', 'f_train', 'pred_time', 'acc_test',
+                'f_test'
+        ]):
             for i in np.arange(3):
                 x = bar_width * n_estimators
-                ax[j//3, j%3].bar(i*x+k*(bar_width), results[learner][i][metric], width = bar_width, color = colors[k])
-                ax[j//3, j%3].set_xticks([x-0.2, x*2-0.2, x*3-0.2])
-                ax[j//3, j%3].set_xticklabels(["1%", "10%", "100%"])
-                ax[j//3, j%3].set_xlabel("Training Set Size")
-                ax[j//3, j%3].set_xlim((-0.2, x*3))
+                ax[j // 3, j % 3].bar(i * x + k * (bar_width),
+                                      results[learner][i][metric],
+                                      width=bar_width,
+                                      color=colors[k])
+                ax[j // 3,
+                   j % 3].set_xticks([x - 0.2, x * 2 - 0.2, x * 3 - 0.2])
+                ax[j // 3, j % 3].set_xticklabels(["1%", "10%", "100%"])
+                ax[j // 3, j % 3].set_xlabel("Training Set Size")
+                ax[j // 3, j % 3].set_xlim((-0.2, x * 3))
     ax[0, 0].set_ylabel("Time (in seconds)")
     ax[0, 1].set_ylabel("Accuracy Score")
     ax[0, 2].set_ylabel("F-score")
@@ -342,10 +398,30 @@ def visualize(results, n_classes):
     ax[1, 0].set_title("Model Predicting")
     ax[1, 1].set_title("Accuracy Score on Testing Set")
     ax[1, 2].set_title("F-score on Testing Set")
-    ax[0, 1].axhline(y = accuracy, xmin = -0.1, xmax = 3.0, linewidth = 1, color = 'k', linestyle = 'dashed')
-    ax[1, 1].axhline(y = accuracy, xmin = -0.1, xmax = 3.0, linewidth = 1, color = 'k', linestyle = 'dashed')
-    ax[0, 2].axhline(y = f1, xmin = -0.1, xmax = 3.0, linewidth = 1, color = 'k', linestyle = 'dashed')
-    ax[1, 2].axhline(y = f1, xmin = -0.1, xmax = 3.0, linewidth = 1, color = 'k', linestyle = 'dashed')
+    ax[0, 1].axhline(y=accuracy,
+                     xmin=-0.1,
+                     xmax=3.0,
+                     linewidth=1,
+                     color='k',
+                     linestyle='dashed')
+    ax[1, 1].axhline(y=accuracy,
+                     xmin=-0.1,
+                     xmax=3.0,
+                     linewidth=1,
+                     color='k',
+                     linestyle='dashed')
+    ax[0, 2].axhline(y=f1,
+                     xmin=-0.1,
+                     xmax=3.0,
+                     linewidth=1,
+                     color='k',
+                     linestyle='dashed')
+    ax[1, 2].axhline(y=f1,
+                     xmin=-0.1,
+                     xmax=3.0,
+                     linewidth=1,
+                     color='k',
+                     linestyle='dashed')
     ax[0, 1].set_ylim((0, 1))
     ax[0, 2].set_ylim((0, 1))
     ax[1, 1].set_ylim((0, 1))
@@ -355,6 +431,8 @@ def visualize(results, n_classes):
     for i, learner in enumerate(results.keys()):
         pl.bar(0, 0, color=colors[i], label=learner)
     pl.legend()
-    pl.suptitle("Performance Metrics for Three Supervised Learning Models", fontsize = 16, y = 1.10)
+    pl.suptitle("Performance Metrics for Three Supervised Learning Models",
+                fontsize=16,
+                y=1.10)
     pl.tight_layout()
     pl.show()
